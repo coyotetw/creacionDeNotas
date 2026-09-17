@@ -11,6 +11,12 @@ except ImportError:
 import streamlit as st
 from datetime import datetime
 
+
+def render_html(html: str) -> str:
+    """Elimina la sangría de cada línea para que Streamlit no la interprete
+    como un bloque de código Markdown."""
+    return "\n".join(line.strip() for line in html.strip("\n").split("\n"))
+
 # ------------------------------------------------------------------
 # Configuración de página
 # ------------------------------------------------------------------
@@ -204,7 +210,6 @@ with col_preview:
         campos_html = f"""
             <div class="doc-date">{fecha_custom}</div>
             <div class="doc-ref">Ref.: {referencia}</div>
-            <div class="doc-header-code">{header_code}</div>
             <div style="font-weight:bold; margin-bottom: 15px;">ASUNTO: {asunto}</div>
             <div style="margin-bottom:15px; font-style:italic;">{destinatario.replace(chr(10), '<br>')}</div>
         """
@@ -218,7 +223,6 @@ with col_preview:
     elif doc_type == "Memorándum":
         campos_html = f"""
             <div class="doc-date">{fecha_custom}</div>
-            <div class="doc-header-code">{header_code}</div>
             <div class="doc-field-row">
                 <div><b>Producido por:</b> {producido_por}</div>
                 <div><b>Dirigido a:</b> {dirigido_a}</div>
@@ -229,23 +233,19 @@ with col_preview:
     else:  # Pase
         campos_html = f"""
             <div class="doc-date">{fecha_custom}</div>
-            <div class="doc-header-code">{header_code}</div>
             <div class="doc-motivo">MOTIVO: {motivo}</div>
         """
         firma_html = ""
 
-    st.markdown(f"""
+    preview_html = f"""
     <div class="doc-preview-card">
-        <div style="text-align: center; border-bottom: 2px solid #003366; padding-bottom: 10px; margin-bottom: 20px;">
-            <h3 style="margin:0; color:#003366; font-family:'Verdana';">GOBIERNO DEL CHUBUT</h3>
-            <small style="color:#666;">Ministerio de Producción — DPA-SsFyCP-MP</small>
-        </div>
         {campos_html}
         <div class="doc-body">{contenido_instruccion}</div>
         {firma_html}
-        <div class="doc-footer">L.I.A.</div>
+        <div class="doc-footer">{header_code}</div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    st.markdown(render_html(preview_html), unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -263,14 +263,6 @@ with col_preview:
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=15)
 
-        pdf.set_font("Helvetica", "B", 14)
-        pdf.cell(0, 8, clean_text("GOBIERNO DEL CHUBUT"), ln=True, align="C")
-
-        pdf.set_font("Helvetica", "", 9)
-        pdf.cell(0, 5, clean_text("Ministerio de Producción - DPA-SsFyCP-MP"), ln=True, align="C")
-        pdf.line(10, 25, 200, 25)
-        pdf.ln(10)
-
         pdf.set_font("Helvetica", "", 11)
         pdf.cell(0, 8, clean_text(fecha_custom), ln=True, align="R")
 
@@ -279,7 +271,6 @@ with col_preview:
             pdf.cell(0, 6, clean_text(f"Ref.: {referencia}"), ln=True, align="R")
             pdf.ln(3)
             pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(0, 8, clean_text(header_code), ln=True, align="L")
             pdf.cell(0, 8, clean_text(f"ASUNTO: {asunto}"), ln=True, align="L")
             pdf.ln(3)
             pdf.set_font("Helvetica", "I", 10)
@@ -295,8 +286,6 @@ with col_preview:
 
         elif doc_type == "Memorándum":
             pdf.ln(3)
-            pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(0, 8, clean_text(header_code), ln=True, align="L")
             pdf.set_font("Helvetica", "", 10)
             pdf.cell(0, 7, clean_text(f"Producido por: {producido_por}"), ln=True, align="L")
             pdf.cell(0, 7, clean_text(f"Dirigido a: {dirigido_a}"), ln=True, align="L")
@@ -308,8 +297,6 @@ with col_preview:
 
         else:  # Pase
             pdf.ln(3)
-            pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(0, 8, clean_text(header_code), ln=True, align="L")
             pdf.set_font("Helvetica", "B", 10)
             pdf.cell(0, 7, clean_text(f"MOTIVO: {motivo}"), ln=True, align="L")
             pdf.ln(5)
@@ -318,7 +305,7 @@ with col_preview:
 
         pdf.set_y(-30)
         pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(0, 10, clean_text("L.I.A."), align="R", ln=True)
+        pdf.cell(0, 10, clean_text(header_code), align="R", ln=True)
 
         return pdf.output()
 
