@@ -53,6 +53,8 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         min-height: 500px;
         position: relative;
+        color: #000000;
+        font-weight: bold;
     }
     .doc-top-row {
         display: flex;
@@ -101,10 +103,13 @@ st.markdown("""
     .doc-footer {
         position: absolute;
         bottom: 20px;
-        right: 40px;
+        left: 40px;
         font-weight: bold;
         font-size: 1.0em;
         color: #444;
+    }
+    .doc-membrete-space {
+        height: 90px;
     }
     .doc-firma {
         margin-top: 60px;
@@ -210,8 +215,8 @@ with col_preview:
         campos_html = f"""
             <div class="doc-date">{fecha_custom}</div>
             <div class="doc-ref">Ref.: {referencia}</div>
-            <div style="font-weight:bold; margin-bottom: 15px;">ASUNTO: {asunto}</div>
             <div style="margin-bottom:15px; font-style:italic;">{destinatario.replace(chr(10), '<br>')}</div>
+            <div style="font-weight:bold; margin-bottom: 15px;">ASUNTO: {asunto}</div>
         """
         firma_html = f"""
             <div class="doc-firma">
@@ -239,6 +244,7 @@ with col_preview:
 
     preview_html = f"""
     <div class="doc-preview-card">
+        <div class="doc-membrete-space"></div>
         {campos_html}
         <div class="doc-body">{contenido_instruccion}</div>
         {firma_html}
@@ -264,17 +270,18 @@ with col_preview:
         pdf.set_auto_page_break(auto=True, margin=15)
 
         pdf.set_font("Helvetica", "", 11)
+        pdf.ln(30)  # espacio reservado para el membrete impreso
         pdf.cell(0, 8, clean_text(fecha_custom), ln=True, align="R")
 
         if doc_type == "Nota":
             pdf.set_font("Helvetica", "I", 10)
             pdf.cell(0, 6, clean_text(f"Ref.: {referencia}"), ln=True, align="R")
             pdf.ln(3)
-            pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(0, 8, clean_text(f"ASUNTO: {asunto}"), ln=True, align="L")
-            pdf.ln(3)
             pdf.set_font("Helvetica", "I", 10)
             pdf.multi_cell(0, 6, clean_text(destinatario))
+            pdf.ln(3)
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.cell(0, 8, clean_text(f"ASUNTO: {asunto}"), ln=True, align="L")
             pdf.ln(5)
             pdf.set_font("Helvetica", "", 11)
             pdf.multi_cell(0, 7, clean_text(contenido_instruccion), align="J")
@@ -305,7 +312,7 @@ with col_preview:
 
         pdf.set_y(-30)
         pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(0, 10, clean_text(header_code), align="R", ln=True)
+        pdf.cell(0, 10, clean_text(header_code), align="L", ln=True)
 
         return pdf.output()
 
